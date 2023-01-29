@@ -6,7 +6,6 @@ import sys
 import os
 from dotenv import load_dotenv
 import exceptions
-from http import HTTPStatus
 
 load_dotenv()
 
@@ -31,7 +30,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """Отправляет сообщение в Telegram чат"""
+    """Отправляет сообщение в Telegram чат."""
     try:
         bot.send_message(
             chat_id=TELEGRAM_CHAT_ID,
@@ -43,7 +42,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """Запрос к эндпоинту API Yandex Practicum"""
+    """Запрос к эндпоинту API Yandex Practicum."""
     try:
         response = requests.get(
             ENDPOINT, headers=HEADERS, params={'from_date': timestamp}
@@ -61,7 +60,7 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    """Проверяет ответ API на соответствие документации"""
+    """Проверяет ответ API на соответствие документации."""
     if not isinstance(response, dict):
         raise TypeError('Ошибка в типе ответа API')
     homeworks = response.get('homeworks')
@@ -73,7 +72,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлекает из информации статус домашней работы"""
+    """Извлекает из информации статус домашней работы."""
     if 'homework_name' not in homework:
         raise KeyError('В ответе отсутсвует ключ homework_name')
     homework_name = homework.get('homework_name')
