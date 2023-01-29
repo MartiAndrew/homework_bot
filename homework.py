@@ -1,4 +1,4 @@
-from telegram import Bot
+import telegram
 import requests
 import logging
 import time
@@ -37,40 +37,45 @@ def send_message(bot, message):
             chat_id=TELEGRAM_CHAT_ID,
             text=message,
         )
-    except exceptions.TelegramError as error:
-        raise exceptions.TelegramError(
-            f'Не удалось отправить сообщение {error}'
-        )
-    else:
         logging.debug(f'Сообщение отправлено {message}')
+    except telegram.TelegramError as telegram_error:
+        logging.error(f'Не удалось отправить сообщение {telegram_error}')
 
 
 def get_api_answer(timestamp):
     """Запрос к эндпоинту API Yandex Practicum"""
     try:
-        homeworks = requests.get(
+        response = requests.get(
             ENDPOINT, headers=HEADERS, params={'from_date': timestamp}
         )
-        if homeworks.status_code != HTTPStatus.OK:
-            raise exceptions.InvalidResponseCode('Не удалось получить ответ API')
-        homeworks = homeworks.json()
+        if response.status_code != 200:
+            code_api_msg = (
+                f'{ENDPOINT} недоступен.'
+                f' Код ответа API: {response.status_code}')
+            logging.error(code_api_msg)
+            raise exceptions.InvalidResponseCode(code_api_msg)
+        homeworks = response.json()
         return homeworks
-    except Exception as error:
+    except requests.exceptions.RequestException as error:
         logging.error(f'Ошибка при запросе к основному API: {error}')
 
 
 def check_response(response):
     """Проверяет ответ API на соответствие документации"""
-    if isinstance(response, dict):
-        if isinstance(response['homeworks'], list):
-            return True
-    if 'homeworks' not in response or 'current_date' not in response:
+    if not isinstance(response, dict):
+        raise TypeError('Ошибка в типе ответа API')
+    homeworks = response.get('homeworks')
+    if not isinstance(homeworks, list):
+        raise TypeError('Homeworks не является списком')
+    if 'homeworks' not in response:
         raise exceptions.EmptyResponseFromAPI('Пустой ответ от API')
-    return False
+    return homeworks
 
 
 def parse_status(homework):
     """Извлекает из информации статус домашней работы"""
+    if 'homework_name' not in homework:
+        raise KeyError('В ответе отсутсвует ключ homework_name')
     homework_name = homework.get('homework_name')
     status = homework.get('status')
     if status not in HOMEWORK_VERDICTS:
@@ -81,7 +86,7 @@ def parse_status(homework):
 
 def main():
     """Основная логика работы бота."""
-    bot = Bot(token=TELEGRAM_TOKEN)
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     preview_message = None
     while check_tokens():
@@ -93,9 +98,9 @@ def main():
                 message = parse_status(homework)
                 if message != preview_message:
                     send_message(bot, message)
-                else:
-                    logging.debug('Новые статусы работы отсутствуют')
                 preview_message = message
+            else:
+                logging.debug('Новые статусы работы отсутствуют')
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             if message != preview_message:
