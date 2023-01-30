@@ -1,6 +1,5 @@
 import logging
 import time
-import sys
 import os
 
 import telegram
@@ -58,7 +57,10 @@ def send_message(bot: telegram.Bot, message: str) -> NoReturn:
     except telegram.TelegramError as telegram_error:
         logger.error(f'Не удалось отправить сообщение {telegram_error}')
 
-
+# Лёш, здравствуй. Что-то я не понял, что там надо за try вынести, хотел
+# return, но ошибка вылезла...
+# Хотел спросить, это вообще стандартная практика больше 100 строчек написать,
+# на программу из двух работающих функций?:)
 def get_api_answer(timestamp: int) -> dict:
     """Запрос к эндпоинту API Yandex Practicum."""
     try:
