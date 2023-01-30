@@ -41,6 +41,7 @@ stream_handler.setFormatter(formatter)
 
 logger.debug('Старт Бота')
 
+
 def check_tokens() -> bool:
     """Проверка доступности переменных окружения."""
     return all((PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID))
@@ -56,6 +57,7 @@ def send_message(bot: telegram.Bot, message: str) -> NoReturn:
         logger.debug(f'Сообщение отправлено {message}')
     except telegram.TelegramError as telegram_error:
         logger.error(f'Не удалось отправить сообщение {telegram_error}')
+
 
 # Лёш, здравствуй. Что-то я не понял, что там надо за try вынести, хотел
 # return, но ошибка вылезла...
