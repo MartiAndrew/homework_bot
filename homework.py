@@ -1,12 +1,12 @@
-import logging
-import time
-import os
-
-import telegram
-import requests
 from http import HTTPStatus
-from dotenv import load_dotenv
+import logging
+import os
+import time
 from typing import NoReturn
+
+from dotenv import load_dotenv
+import requests
+import telegram
 
 import exceptions
 
@@ -27,18 +27,13 @@ HOMEWORK_VERDICTS = {
 }
 
 logger = logging.getLogger(__name__)
-_log_format = ('%(asctime)s - [%(levelname)s] - %(name)s - '
-               '(%(filename)s).%(funcName)s(%(lineno)d) - %(message)s')
-logging.basicConfig(
-    level=logging.DEBUG,
-    format=_log_format
-)
+logger.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 formatter = logging.Formatter(
-    '%(asctime)s, %(levelname)s, Путь - %(pathname)s, %(message)s')
+    '%(asctime)s, %(levelname)s, Путь - %(pathname)s, %(message)s'
+)
 stream_handler.setFormatter(formatter)
-
 logger.debug('Старт Бота')
 
 
@@ -59,16 +54,15 @@ def send_message(bot: telegram.Bot, message: str) -> NoReturn:
         logger.error(f'Не удалось отправить сообщение {telegram_error}')
 
 
-# Лёш, здравствуй. Что-то я не понял, что там надо за try вынести, хотел
-# return, но ошибка вылезла...
-# Хотел спросить, это вообще стандартная практика больше 100 строчек написать,
-# на программу из двух работающих функций?:)
 def get_api_answer(timestamp: int) -> dict:
     """Запрос к эндпоинту API Yandex Practicum."""
     try:
         response = requests.get(
             ENDPOINT, headers=HEADERS, params={'from_date': timestamp}
         )
+    except requests.exceptions.RequestException as error:
+        logger.error(f'Ошибка при запросе к основному API: {error}')
+    finally:
         if response.status_code != HTTPStatus.OK:
             code_api_msg = (
                 f'{ENDPOINT} недоступен.'
@@ -76,8 +70,6 @@ def get_api_answer(timestamp: int) -> dict:
             logger.error(code_api_msg)
             raise exceptions.InvalidResponseCode(code_api_msg)
         return response.json()
-    except requests.exceptions.RequestException as error:
-        logger.error(f'Ошибка при запросе к основному API: {error}')
 
 
 def check_response(response: dict) -> list:
@@ -87,8 +79,6 @@ def check_response(response: dict) -> list:
     homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
         raise TypeError('Homeworks не является списком')
-    if 'homeworks' not in response:
-        raise exceptions.EmptyResponseFromAPI('Пустой ответ от API')
     return homeworks
 
 
@@ -103,13 +93,24 @@ def parse_status(homework: dict) -> str:
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
+# Привет, Алексей. Хотел спросить, а почему ты написал, что проверить функцию
+# в цикле дорого? Вроде не так часто идёт проверка да и переменных не
+# много..Спасибо тебе за ревью..Конечно так вот можно где-то конструкции
+# посмотреть,
+# несколько задач решить, а потом окажется что это не совсем актуально.
+# Что ты можешь посоветовать по литературе, чтобы практики актуальные по питону
+# там были. Я вот начал читать Чистый код Свейгарта. Не знаю на сколько он
+# поможет...
 
 def main() -> NoReturn:
     """Основная логика работы бота."""
+    if not check_tokens():
+        logger.critical('Отсутствие обязательных переменных окружения!')
+        exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     preview_message = None
-    while check_tokens():
+    while True:
         try:
             response = get_api_answer(timestamp)
             if check_response(response):
@@ -128,8 +129,6 @@ def main() -> NoReturn:
             preview_message = message
         finally:
             time.sleep(RETRY_PERIOD)
-    else:
-        logger.critical('Отсутствие обязательных переменных окружения!')
 
 
 if __name__ == '__main__':
