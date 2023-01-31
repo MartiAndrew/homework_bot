@@ -102,6 +102,7 @@ def parse_status(homework: dict) -> str:
 # там были. Я вот начал читать Чистый код Свейгарта. Не знаю на сколько он
 # поможет...
 
+
 def main() -> NoReturn:
     """Основная логика работы бота."""
     if not check_tokens():
