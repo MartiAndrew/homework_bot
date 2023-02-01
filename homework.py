@@ -62,14 +62,15 @@ def get_api_answer(timestamp: int) -> dict:
         )
     except requests.exceptions.RequestException as error:
         logger.error(f'Ошибка при запросе к основному API: {error}')
-    finally:
-        if response.status_code != HTTPStatus.OK:
-            code_api_msg = (
-                f'{ENDPOINT} недоступен.'
-                f' Код ответа API: {response.status_code}')
-            logger.error(code_api_msg)
-            raise exceptions.InvalidResponseCode(code_api_msg)
-        return response.json()
+        raise exceptions.EmptyResponseFromAPI(
+            f'Ошибка при запросе к основному API: {error}')
+    if response.status_code != HTTPStatus.OK:
+        code_api_msg = (
+            f'{ENDPOINT} недоступен.'
+            f' Код ответа API: {response.status_code}')
+        logger.error(code_api_msg)
+        raise exceptions.InvalidResponseCode(code_api_msg)
+    return response.json()
 
 
 def check_response(response: dict) -> list:
@@ -92,15 +93,6 @@ def parse_status(homework: dict) -> str:
         raise ValueError(f'Неизвестный статус работы - {status}')
     verdict = HOMEWORK_VERDICTS[status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
-
-# Привет, Алексей. Хотел спросить, а почему ты написал, что проверить функцию
-# в цикле дорого? Вроде не так часто идёт проверка да и переменных не
-# много..Спасибо тебе за ревью..Конечно так вот можно где-то конструкции
-# посмотреть,
-# несколько задач решить, а потом окажется что это не совсем актуально.
-# Что ты можешь посоветовать по литературе, чтобы практики актуальные по питону
-# там были. Я вот начал читать Чистый код Свейгарта. Не знаю на сколько он
-# поможет...
 
 
 def main() -> NoReturn:
