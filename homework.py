@@ -1,6 +1,7 @@
 from http import HTTPStatus
 import logging
 import os
+import sys
 import time
 from typing import NoReturn
 
@@ -99,7 +100,7 @@ def main() -> NoReturn:
     """Основная логика работы бота."""
     if not check_tokens():
         logger.critical('Отсутствие обязательных переменных окружения!')
-        exit()
+        sys.exit()
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     preview_message = None
