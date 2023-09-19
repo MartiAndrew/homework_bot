@@ -26,6 +26,17 @@
    TELEGRAM_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
    TELEGRAM_CHAT_ID=YOUR_TELEGRAM_CHAT_ID
 
-5. 
+## Запуск
+
+    Запустите бота с помощью Python:
+
+    ```shell
+    python3  homework_bot.py
+
+##Структура программы
+
+   * homework_bot.py: Основной файл с логикой бота. 
+   * exceptions.py: Модуль с пользовательскими исключениями.
+   * requirements.txt: Файл с зависимостями.
 
 
